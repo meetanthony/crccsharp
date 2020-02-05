@@ -56,7 +56,7 @@ namespace CRC
 
         protected override byte[] HashFinal()
         {
-            return CrcHelper.ToBigEndianBytes(_currentValue ^ Parameters.XorOut);
+            return BitConverter.GetBytes(_currentValue ^ Parameters.XorOut);
         }
 
         private void Init()
@@ -156,10 +156,7 @@ namespace CRC
 
             var hashBytes = ComputeHash(bytes, 0, bytes.Length);
 
-            var hash = CrcHelper.FromBigEndian(hashBytes, HashSize);
-
-            if (hash != Parameters.Check)
-                throw new Exception("Algo check failure!");
+            var hash = BitConverter.ToUInt64(hashBytes, 0);
 
             return hash == Parameters.Check;
         }
