@@ -4,16 +4,20 @@ namespace CRC
 {
     public static class CrcTest
     {
-        public static void Test()
+        public static bool Test()
         {
-            foreach (var p in CrcStdParams.StandartParameters.Values)
+            var results = Crc.CheckAll();
+
+            var good = true;
+            foreach (var result in results)
             {
-                var crc = new Crc(p);
-                if (!crc.IsRight())
+                if (result.IsRight == false)
                 {
-                    Console.WriteLine(p.Name);
+                    System.Console.WriteLine(result.Parameter.Name);
+                    good = false;
                 }
             }
+            return good;
         }
     }
 }

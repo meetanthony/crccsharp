@@ -46,7 +46,7 @@ namespace CRC
 
         public override void Initialize()
         {
-            _currentValue = Parameters.RefOut ? CrcHelper.ReverseBits(Parameters.Init, HashSize) : Parameters.Init;
+            _currentValue = Parameters.RefIn ? CrcHelper.ReverseBits(Parameters.Init, HashSize) : Parameters.Init;
         }
 
         protected override void HashCore(byte[] array, int ibStart, int cbSize)
@@ -56,6 +56,9 @@ namespace CRC
 
         protected override byte[] HashFinal()
         {
+            if (Parameters.RefIn ^ Parameters.RefOut)
+                _currentValue = CrcHelper.ReverseBits(_currentValue, HashSize);
+
             return BitConverter.GetBytes(_currentValue ^ Parameters.XorOut);
         }
 
@@ -71,11 +74,11 @@ namespace CRC
         {
             ulong crc = init;
 
-            if (Parameters.RefOut)
+            if (Parameters.RefIn)
             {
                 for (int i = offset; i < offset + length; i++)
                 {
-                    crc = (_table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8));
+                    crc = _table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
                     crc &= _mask;
                 }
             }
@@ -85,7 +88,7 @@ namespace CRC
                 toRight = toRight < 0 ? 0 : toRight;
                 for (int i = offset; i < offset + length; i++)
                 {
-                    crc = (_table[((crc >> toRight) ^ data[i]) & 0xFF] ^ (crc << 8));
+                    crc = _table[((crc >> toRight) ^ data[i]) & 0xFF] ^ (crc << 8);
                     crc &= _mask;
                 }
             }
@@ -108,12 +111,12 @@ namespace CRC
             else if (HashSize > 8)
                 r <<= (HashSize - 8);
 
-            ulong lastBit = (1ul << (HashSize - 1));
+            ulong lastBit = 1ul << (HashSize - 1);
 
             for (int i = 0; i < 8; i++)
             {
                 if ((r & lastBit) != 0)
-                    r = ((r << 1) ^ Parameters.Poly);
+                    r = (r << 1) ^ Parameters.Poly;
                 else
                     r <<= 1;
             }
@@ -128,9 +131,6 @@ namespace CRC
 
         #region Test functions
 
-        /// <summary>
-        /// Проверить алгоритмы на корректность
-        /// </summary>
         public static CheckResult[] CheckAll()
         {
             var parameters = CrcStdParams.StandartParameters;
@@ -143,7 +143,8 @@ namespace CRC
                 result.Add(new CheckResult()
                 {
                     Parameter = parameter.Value,
-                    Table = crc.GetTable()
+                    Table = crc.GetTable(),
+                    IsRight = crc.IsRight()
                 });
             }
 
@@ -163,6 +164,8 @@ namespace CRC
 
         public class CheckResult
         {
+            public bool IsRight { get; set; }
+
             public Parameters Parameter { get; set; }
 
             public ulong[] Table { get; set; }
