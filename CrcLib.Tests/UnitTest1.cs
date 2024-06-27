@@ -17,15 +17,15 @@ public class UnitTest1
 
     public static IEnumerable<object[]> EnumAlgorithms()
     {
-        foreach (var number in Enum.GetValues(typeof(Algorithms)))
+        foreach (var algorithm in Enum.GetValues(typeof(Algorithms)))
         {
-            yield return new [] { number };
+            yield return new [] { algorithm };
         }
     }
 
     [Theory]
     [MemberData(nameof(EnumAlgorithms))]
-    public void CheckAll(Algorithms algorithm)
+    public void CheckAlgorithm(Algorithms algorithm)
     {
         var parameters = StdParams.StandartParameters[algorithm];
 
